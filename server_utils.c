@@ -44,7 +44,7 @@ void mapSnip(Player *player, Server *server){
         }
         strcat(temp, "\n");
         strcat(player->packet.userMap, temp);
-        prints(player->packet.userMap);
+        //prints(player->packet.userMap);
         Y++;
     }
 }
@@ -197,7 +197,7 @@ int init_err_panel(Server *server){
     if(server->err_panel.window == NULL)
         return ERROR_WIN;
 
-    box(server->err_panel.window, 0, 0);
+    //box(server->err_panel.window, 0, 0);
     wrefresh(server->err_panel.window);
     return ERROR_OK;
 }
@@ -386,6 +386,10 @@ int isTreasure(Server *server, int pos_x, int pos_y){
     }
 }
 void increaseCoins(Player *player, enum treasures treasure, int pos_x, int pos_y, linked_list *list){
+    if(player->packet.stats.type == BEAST){
+
+        return ;
+    }
     int val = in_list(list, pos_x, pos_y);
     switch(treasure){
         case COIN:
@@ -409,6 +413,14 @@ Player *Collision(Server *server, Player *player){
             continue;
         if(temp.pos_x == player->packet.stats.pos_x && temp.pos_y == player->packet.stats.pos_y){
             return &server->players[i];
+        }
+    }
+    for(int i = 0; i<BEASTS; i++){
+        PlayerStats temp = server->beasts[i].packet.stats;
+        if(temp.player_number == player->packet.stats.player_number)
+            continue;
+        if(temp.pos_x == player->packet.stats.pos_x && temp.pos_y == player->packet.stats.pos_y){
+            return &server->beasts[i];
         }
     }
     return NULL;
@@ -568,6 +580,7 @@ void create_box(Server *server, bool flag, int move, Player *player)
     }
     //print(server->players[0].packet.stats.pos_x, server->players[0].packet.stats.pos_y);
     print(server->players[0].packet.stats.carried_coins, 0);
+
     wrefresh(server->main_screen.window);
     print_stats_screen(server);
 }

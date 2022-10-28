@@ -36,6 +36,11 @@ enum types{
     LISTENER = 3
 };
 
+enum commands{
+    COMM_REDUCE = 0,
+    COMM_SPAWN = 'b',
+};
+
 enum errors{
     ERROR_PARAMS = -1,
     ERROR_FILE = -2,

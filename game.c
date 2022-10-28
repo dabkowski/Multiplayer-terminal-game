@@ -18,6 +18,7 @@
 #include <pthread.h>
 #include "linked_list.h"
 #include "server_utils.h"
+#include <fcntl.h>
 
 /*  0 - listener
  *  1 - player - HUMAN/CPU
@@ -107,13 +108,23 @@ int main(void){
         exit(EXIT_FAILURE);
     }
 
+
     freeaddrinfo(result);
 
     // Mark socket for accepting incoming connections using accept
     if (listen(listener, BACKLOG) == -1)
         perror("listen");
 
-
+    if(!fork()){
+        prints("In fork");
+        int fd = open("/dev/null", O_RDWR);
+        dup2(fd, 0);
+        dup2(fd, 1);
+        dup2(fd, 2);
+        if (fd > 2)
+            close(fd);
+        execl("beast_client", "beast_client", "localhost", NULL);
+    }
 
     struct pollfd pollfds_beasts[BEASTS];
     struct pollfd pollfds_sockets[3];
@@ -138,6 +149,7 @@ int main(void){
     for(int i = 0; i<BEASTS; i++){
         pollfds_beasts[i].fd = -1;
     }
+    (pollfds_sockets+2)->fd = -1;
     socklen_t addrlen;
     struct sockaddr_storage client_saddr;
 
@@ -166,6 +178,14 @@ int main(void){
             if(option != 'b' && option != 'B'){
                 serverInputThread(&server, option);
             }
+            else if(option == 'b' || option == 'B'){
+                if(((pollfds_sockets+2)->fd > 0)){
+                    int action = COMM_SPAWN;
+                    print_err(&server, "Sending command to beast listener!");
+                    if(send((pollfds_sockets + 2)->fd, &action, sizeof(int), 0) == -1)
+                        perror("send");
+                }
+            }
         }
         if( (pollfds_sockets->revents & POLLIN) == POLLIN && (pollfds_sockets->fd == listener)){
             addrlen = sizeof(struct sockaddr_storage);
@@ -184,6 +204,7 @@ int main(void){
                 (pollfds_sockets + 2)->fd = fd_new;
                 (pollfds_sockets + 2)->events = POLLIN;
                 (pollfds_sockets + 2)->revents = 0;
+                print_err(&server, "Beast listener has connected!");
                 continue;
             }
 
@@ -322,18 +343,16 @@ int main(void){
         for(int fd = 0; fd < PLAYERS; fd++){
             if ((pollfds_players + fd)->fd <= 0 || server.players[fd].active == -1)
                 continue;
-            prints("Here at players\n");
+
             if (send((pollfds_players + fd)->fd, &server.players[fd].packet, sizeof(UserPacket), 0) == -1)
                 perror("send");
-            //print("Server: Message sent");
         }
         for(int fd = 0; fd < BEASTS; fd++){
             if ((pollfds_beasts + fd)->fd <= 0 || server.beasts[fd].active == -1)
                 continue;
-            prints("Here at beasts\n");
+
             if (send((pollfds_beasts + fd)->fd, &server.beasts[fd].packet, sizeof(UserPacket), 0) == -1)
                 perror("send");
-            //print("Server: Message sent");
         }
 
     }

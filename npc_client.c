@@ -127,13 +127,11 @@ int main (int argc, char **argv)
             // receive response from server
             if (recv (sock_fd, &map, sizeof(UserPacket), 0) == -1)
                 perror("recv");
-            print_msg("Client: map received");
             printMap(map, map.userMap);
 
             memset(&map, 0, sizeof(map));
             if (send (sock_fd, &option, sizeof(int), MSG_NOSIGNAL) == -1)
                 perror("send");
-            print_msg("Client: message sent");
         }
     }
 
