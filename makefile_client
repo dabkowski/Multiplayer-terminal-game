@@ -1,0 +1,17 @@
+# List your *.h files (if you do not have them in your project then leave the variable "headers" empty):
+headers = server_utils.h linked_list.h
+
+# List your *.c files:
+sources = client.c server_utils.c linked_list.c
+
+# Specify name of your program:
+executable = client
+
+$(executable): $(headers) $(sources)
+	gcc -g $(sources) -o $(executable) -lncurses -pthread -lm
+
+.PHONY: clean
+clean:
+	rm $(executable)
+
+.PHONY: check
