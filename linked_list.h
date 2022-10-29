@@ -19,4 +19,5 @@ struct linked_list_t* ll_create();
 int ll_push_back(struct linked_list_t* ll, int pos_x, int pos_y, int value);
 int in_list(struct linked_list_t* ll, int pos_x, int pos_y);
 int ll_remove(struct linked_list_t* ll, unsigned int index);
+
 #endif //SECOND_TRY_LINKED_LIST_H

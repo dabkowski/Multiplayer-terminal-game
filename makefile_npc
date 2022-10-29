@@ -8,7 +8,7 @@ sources = npc_client.c server_utils.c linked_list.c
 executable = npc_client
 
 $(executable): $(headers) $(sources)
-	gcc -g $(sources) -o $(executable) -lncurses -pthread -lm
+	gcc -g $(sources) -o $(executable)  -lncurses -pthread -lm
 
 .PHONY: clean
 clean:

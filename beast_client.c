@@ -79,7 +79,8 @@ void *beast_controller(void *arg){
         break;
     }
 
-    if (rptr == NULL) {               // Not successful with any address
+    if (rptr == NULL) {
+        endwin();// Not successful with any address
         fprintf(stderr, "Not able to connect\n");
         exit (EXIT_FAILURE);
     }
@@ -115,14 +116,19 @@ void *beast_controller(void *arg){
 
         if (pfds[1].revents & POLLIN) {
             // receive response from server
-            if (recv (sock_fd, &map, sizeof(UserPacket), 0) == -1)
-                perror("recv");
+            ssize_t ret;
+            if ( (ret = recv (sock_fd, &map, sizeof(UserPacket), 0)) == -1 || ret == 0) {
+                close(sock_fd);
+                pthread_exit(NULL);
+            }
             print_msg("Client: map received");
             printMap(map, map.userMap);
 
             memset(&map, 0, sizeof(map));
-            if (send (sock_fd, &option, sizeof(int), MSG_NOSIGNAL) == -1)
-                perror("send");
+            if (send (sock_fd, &option, sizeof(int), MSG_NOSIGNAL) == -1) {
+                close(sock_fd);
+                pthread_exit(NULL);
+            }
             //print_msg("Client: message sent");
         }
     }
@@ -203,17 +209,19 @@ int main (int argc, char **argv)
 
         if (pfds[1].revents & POLLIN) {
             // receive response from server
-            if (recv (sock_fd, &msg, sizeof(int), 0) == -1)
-                perror("recv");
-
+            ssize_t ret;
+            if ( (ret = recv (sock_fd, &msg, sizeof(int), 0)) == -1 || ret == 0){
+                printw("Connection with server lost! Press any key to exit...");
+                endwin();
+                close(sock_fd);
+                return ERROR_CONN;
+            }
             if(msg == COMM_SPAWN){
-                prints("It got into new thread");
+                if(numberOfBeasts == BEASTS) continue;
                 pthread_create(&threads[numberOfBeasts], NULL, beast_controller, argv[1]);
             }
 
         }
     }
-
-    exit (EXIT_SUCCESS);
 }
 

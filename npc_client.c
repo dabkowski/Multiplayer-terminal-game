@@ -90,7 +90,8 @@ int main (int argc, char **argv)
         break;
     }
 
-    if (rptr == NULL) {               // Not successful with any address
+    if (rptr == NULL) {
+        endwin();// Not successful with any address
         fprintf(stderr, "Not able to connect\n");
         exit (EXIT_FAILURE);
     }
@@ -107,6 +108,12 @@ int main (int argc, char **argv)
         perror("send");
     if (recv (sock_fd, &map, sizeof(UserPacket), 0) == -1)
         perror("recv");
+    if(strcmp(map.userMap, "Server full!") == 0){
+        printw("Server is full! Press any key to exit...");
+        getch();
+        endwin();
+        return -1;
+    }
     printMap(map, map.userMap);
 
 
@@ -123,18 +130,37 @@ int main (int argc, char **argv)
         if (r < 0) { perror("poll"); }
 
 
+        if(pfds[0].revents & POLLIN){
+            option = getch();
+            if(option == 'q' || option == 'Q'){
+                break;
+            }
+        }
         if (pfds[1].revents & POLLIN) {
             // receive response from server
-            if (recv (sock_fd, &map, sizeof(UserPacket), 0) == -1)
-                perror("recv");
+            if (recv (sock_fd, &map, sizeof(UserPacket), 0) == -1) {
+                erase();
+                printw("Connection with server lost! Press any key to exit...");
+                getch();
+                endwin();
+                close(sock_fd);
+                return ERROR_CONN;
+            }
             printMap(map, map.userMap);
 
             memset(&map, 0, sizeof(map));
-            if (send (sock_fd, &option, sizeof(int), MSG_NOSIGNAL) == -1)
-                perror("send");
+            if (send (sock_fd, &option, sizeof(int), MSG_NOSIGNAL) == -1) {
+                erase();
+                printw("Connection with server lost! Press any key to exit...");
+                getch();
+                endwin();
+                close(sock_fd);
+                return ERROR_CONN;
+            }
         }
     }
-
+    close(sock_fd);
+    endwin();
     exit (EXIT_SUCCESS);
 }
 

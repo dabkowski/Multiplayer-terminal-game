@@ -78,6 +78,7 @@ int main(void){
     struct addrinfo *result;
     int s;
     if ((s = getaddrinfo(NULL, SERVER_PORT, &hints, &result)) != 0) {
+        endwin();
         fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(s));
         exit(EXIT_FAILURE);
     }
@@ -94,16 +95,16 @@ int main(void){
             continue;
 
         if (setsockopt(listener, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(int)) == -1)
-            perror("setsockopt");
-
+            print_err(&server, "Setsockopt error!");
         if (bind(listener, rptr->ai_addr, rptr->ai_addrlen) == 0)  // Success
             break;
 
         if (close(listener) == -1)
-            perror("close");
+            print_err(&server, "Could not close listener!");
     }
 
     if (rptr == NULL) {               // Not successful with any address
+        endwin();
         fprintf(stderr, "Not able to bind\n");
         exit(EXIT_FAILURE);
     }
@@ -113,16 +114,13 @@ int main(void){
 
     // Mark socket for accepting incoming connections using accept
     if (listen(listener, BACKLOG) == -1)
-        perror("listen");
-
+        print_err(&server, "Listener error!");
     if(!fork()){
         prints("In fork");
         int fd = open("/dev/null", O_RDWR);
         dup2(fd, 0);
         dup2(fd, 1);
         dup2(fd, 2);
-        if (fd > 2)
-            close(fd);
         execl("beast_client", "beast_client", "localhost", NULL);
     }
 
@@ -156,7 +154,7 @@ int main(void){
 
     while (1) {
         // monitor readfds for readiness for reading
-        usleep(500000);
+        usleep(200000);
         nfds = numfds;
         if (poll(pollfds_sockets, 3, 0) == -1) // timer_fd
             perror("poll");
@@ -175,6 +173,10 @@ int main(void){
         //}
         if(((pollfds_sockets+1)->revents & POLLIN) == POLLIN){
             int option = wgetch(server.main_screen.window);
+
+            if(option == 'Q' || option == 'q'){
+                break;
+            }
             if(option != 'b' && option != 'B'){
                 serverInputThread(&server, option);
             }
@@ -183,7 +185,7 @@ int main(void){
                     int action = COMM_SPAWN;
                     print_err(&server, "Sending command to beast listener!");
                     if(send((pollfds_sockets + 2)->fd, &action, sizeof(int), 0) == -1)
-                        perror("send");
+                        print_err(&server, "Error when sending a packet to beast listener!");
                 }
             }
         }
@@ -191,13 +193,13 @@ int main(void){
             addrlen = sizeof(struct sockaddr_storage);
             int fd_new;
             if ((fd_new = accept(listener, (struct sockaddr *) &client_saddr, &addrlen)) == -1)
-                perror("accept");
+                print_err(&server, "Connection could not be established!");
             // add fd_new to pollfds
 
             int who;
             ssize_t numbytes = recv(fd_new, &who, sizeof(int), 0);
             if(numbytes == -1){
-                perror("recv");
+                print_err(&server, "Error when receiving a packet!");
             }
 
             if(who == LISTENER){
@@ -212,10 +214,15 @@ int main(void){
             enum types type;
             numbytes = recv(fd_new, &type, sizeof(int), 0);
             if(numbytes == -1){
-                perror("recv");
+                print_err(&server, "Error when receiving a packet!");
             }
 
             if(type == BEAST) {
+                if(numberOfBeasts == BEASTS){
+                    print_err(&server, "Beast limit reached!");
+                    close(fd_new);
+                    continue;
+                }
                 for (int fd = 0; fd < BEASTS; fd++) {
                     if (((pollfds_beasts + fd)->fd < 0)) {
                         numfds++;
@@ -226,22 +233,34 @@ int main(void){
                         pid_t pid_client;
                         numbytes = recv((pollfds_beasts + fd)->fd, &pid_client, sizeof(pid_t), 0);
                         if (numbytes == -1) {
-                            perror("recv");
+                            print_err(&server, "Error when receiving a packet from beast!");
                         }
 
                         init_player(&server, type, pid_client, fd);
                         create_box(&server, TRUE, 0, NULL);
                         mapSnip(&server.beasts[fd], &server);
                         numberOfBeasts++;
-                        if (send((pollfds_beasts + fd)->fd, &server.beasts[fd].packet,
-                                 sizeof(UserPacket), 0) == -1)
-                            perror("send");
+                        if (send((pollfds_beasts + fd)->fd, &server.beasts[fd].packet, sizeof(UserPacket), 0) == -1)
+                            print_err(&server, "Error when sending a to beast!");
                         print_err(&server, "Beast has been spawned!");
                         break;
                     }
                 }
             }
             else if(type == PLAYER || type == NPC){
+                if(numberOfPlayers == PLAYERS){
+                    print_err(&server, "Server full!");
+                    pid_t pid_client;
+                    numbytes = recv(fd_new, &pid_client, sizeof(pid_t), 0);
+                    if(numbytes == -1){
+                        print_err(&server, "Error when receiving a packet from player!");
+                    }
+                    UserPacket err_msg = {.userMap="Server full!"};
+                    if (send(fd_new, &err_msg, sizeof(UserPacket), 0) == -1)
+                        print_err(&server, "Error when sending a packet to player!");
+                    close(fd_new);
+                    continue;
+                }
                 for(int fd = 0; fd < PLAYERS; fd++){
                     if(((pollfds_players + fd)->fd < 0)){
 
@@ -252,15 +271,15 @@ int main(void){
                         pid_t pid_client;
                         numbytes = recv((pollfds_players + fd)->fd, &pid_client, sizeof(pid_t), 0);
                         if(numbytes == -1){
-                            perror("recv");
+                            print_err(&server, "Error when receiving a packet from player!");
                         }
 
                         init_player(&server, type, pid_client, fd);
                         create_box(&server, TRUE, 0, NULL);
                         mapSnip(&server.players[fd], &server);
-                        numberOfPlayers++;
+                        //numberOfPlayers++;
                         if (send((pollfds_players + fd)->fd, &server.players[fd].packet, sizeof(UserPacket), 0) == -1)
-                            perror("send");
+                            print_err(&server, "Error when sending a packet to player!");
                         print_err(&server, "Player has joined the game!");
                         break;
                     }
@@ -285,7 +304,7 @@ int main(void){
                     print_err(&server, "Connection closed by client! Player has left the game.");
                     //fprintf(stderr, "Socket %d closed by client\n", (pollfds_players + fd)->fd);
                     if (close((pollfds_players + fd)->fd) == -1)
-                        perror("close");
+                        print_err(&server, "Error when closing a connection with a player!");
                     erasePlayer(&server.players[fd]);
                     numberOfPlayers--;
                     (pollfds_players + fd)->fd *= -1; // make it negative so that it is ignored in future
@@ -312,13 +331,13 @@ int main(void){
                 ssize_t numbytes = recv((pollfds_beasts  + fd)->fd, &move, sizeof(int), 0);
                 //print("Server: Message received");
                 if (numbytes == -1)
-                    perror("recv");
+                    print_err(&server, "Error when receiving a packet from beast!");
                 else if (numbytes == 0) {
                     // connection closed by client
-                    print_err(&server, "Connection closed by client! Beast has left the game.");
+                    print_err(&server, "Connection closed by client! Beast has left the game!");
                     //fprintf(stderr, "Socket %d closed by client\n", (pollfds_beasts  + fd)->fd);
                     if (close((pollfds_beasts + fd)->fd) == -1)
-                        perror("close");
+                        print_err(&server, "Error when closing a connection with beast!");
                     numberOfBeasts--;
                     erasePlayer(&server.beasts[fd]);
                     (pollfds_beasts  + fd)->fd *= -1; // make it negative so that it is ignored in future
@@ -345,23 +364,34 @@ int main(void){
                 continue;
 
             if (send((pollfds_players + fd)->fd, &server.players[fd].packet, sizeof(UserPacket), 0) == -1)
-                perror("send");
+                print_err(&server, "Error when sending a packet to the client!");
         }
         for(int fd = 0; fd < BEASTS; fd++){
             if ((pollfds_beasts + fd)->fd <= 0 || server.beasts[fd].active == -1)
                 continue;
 
             if (send((pollfds_beasts + fd)->fd, &server.beasts[fd].packet, sizeof(UserPacket), 0) == -1)
-                perror("send");
+                print_err(&server, "Error when sending a packet to the beast!");
         }
 
     }
 
+    for(int i = 0; i<BEASTS; i++){
+        if(pollfds_beasts[i].fd < 0) continue;
+        close(pollfds_beasts[i].fd);
+    }
+    for(int i = 0; i<PLAYERS; i++){
+        if(pollfds_players[i].fd < 0) continue;
+        close(pollfds_players[i].fd);
+    }
+    for(int i = 0; i<3; i++){
+        if(pollfds_sockets[i].fd < 0) continue;
+        close(pollfds_sockets[i].fd);
+    }
 
 
-
-    sleep(100);
     endwin();
+    return ERROR_OK;
 
 
 }
