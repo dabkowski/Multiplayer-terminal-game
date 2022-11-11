@@ -3,46 +3,13 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
 #include <netdb.h>
 #include <poll.h>
-#include <errno.h>
-#include <syslog.h>
 #include <unistd.h>
-#include <stdbool.h>
-#include <ctype.h>
-#include <stdint.h>
 #include <time.h>
 #include <ncurses.h>
-#include <pthread.h>
-#include "linked_list.h"
 #include "server_utils.h"
 #include <fcntl.h>
-
-/*  0 - listener
- *  1 - player - HUMAN/CPU
- *  2 - player - HUMAN/CPU
- *  3 - player - HUMAN/CPU
- *  4 - player - HUMAN/CPU
- *  5 - beast
- *  6 - beast
- *  7 - beast
- *  8 - beast
-
-*/
-
-
-/*
- * TODO
- * Add client/server error handling
- * Clean up messy code
- * Implement correct spawns
- * Player state reset after disconnection
- * PLayer limit
- * Beast limit
- * Beast spawning using separate process, exec()
- */
 
 
 int main(void){
@@ -116,7 +83,6 @@ int main(void){
     if (listen(listener, BACKLOG) == -1)
         print_err(&server, "Listener error!");
     if(!fork()){
-        prints("In fork");
         int fd = open("/dev/null", O_RDWR);
         dup2(fd, 0);
         dup2(fd, 1);
@@ -149,8 +115,8 @@ int main(void){
     }
     (pollfds_sockets+2)->fd = -1;
     socklen_t addrlen;
-    struct sockaddr_storage client_saddr;
 
+    struct sockaddr_storage client_saddr;
 
     while (1) {
         // monitor readfds for readiness for reading

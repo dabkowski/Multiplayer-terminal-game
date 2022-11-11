@@ -1,5 +1,6 @@
 #include "linked_list.h"
 #include <stdlib.h>
+
 struct linked_list_t* ll_create(){
     struct linked_list_t *lista = calloc(sizeof(struct linked_list_t), 1);
     if(lista == NULL){

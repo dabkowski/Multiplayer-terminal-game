@@ -1,43 +1,21 @@
 
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
 #include <netdb.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <errno.h>
 #include <unistd.h>
-#include <ctype.h>
-#include <stdint.h>
 #include <time.h>
 #include <ncurses.h>
-#include <time.h>
 #define SERVER_PORT                "4358"
 #define QUIT                       0
 #include "server_utils.h"
 #include <poll.h>
 #include <sys/time.h>
 
-void print_msg(char *message){
-    struct timeval current_time;
-    gettimeofday(&current_time, NULL);
 
-    struct tm *tm;
-
-    gettimeofday(&current_time, NULL);
-
-    tm = localtime(&current_time.tv_sec);
-
-    FILE *fptr = fopen("/dev/pts/7", "wr");
-    fprintf(fptr,"%s %d\n",
-            message,
-            tm->tm_sec);
-    fclose(fptr);
-}
-
-int main (int argc, char **argv)
+int main()
 {
     srand(time(NULL));
 
@@ -49,13 +27,7 @@ int main (int argc, char **argv)
 
     ncurs_setup();
     keypad(stdscr, TRUE);
-
-
-
-    if (argc != 2) {
-        fprintf (stderr, "Usage: client hostname\n");
-        exit (EXIT_FAILURE);
-    }
+    
 
     struct addrinfo hints;
     memset(&hints, 0, sizeof (struct addrinfo));
@@ -64,7 +36,7 @@ int main (int argc, char **argv)
 
     struct addrinfo *result;
     int s;
-    if ((s = getaddrinfo (argv [1], SERVER_PORT, &hints, &result)) != 0) {
+    if ((s = getaddrinfo ("localhost", SERVER_PORT, &hints, &result)) != 0) {
         fprintf (stderr, "getaddrinfo: %s\n", gai_strerror (s));
         exit (EXIT_FAILURE);
     }

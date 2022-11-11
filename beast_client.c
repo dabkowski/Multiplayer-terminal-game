@@ -1,43 +1,18 @@
-
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
 #include <netdb.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <errno.h>
 #include <unistd.h>
-#include <ctype.h>
-#include <stdint.h>
 #include <time.h>
 #include <ncurses.h>
-#include <time.h>
 #include "server_utils.h"
 #include <poll.h>
-#include <sys/time.h>
 #include <pthread.h>
 
 #define SERVER_PORT "4358"
 #define QUIT 0
-
-void print_msg(char *message){
-    struct timeval current_time;
-    gettimeofday(&current_time, NULL);
-
-    struct tm *tm;
-
-    gettimeofday(&current_time, NULL);
-
-    tm = localtime(&current_time.tv_sec);
-
-    FILE *fptr = fopen("/dev/pts/7", "wr");
-    fprintf(fptr,"%s %d\n",
-            message,
-            tm->tm_sec);
-    fclose(fptr);
-}
 
 void *beast_controller(void *arg){
 
@@ -45,7 +20,6 @@ void *beast_controller(void *arg){
     struct pollfd pfds[2];
 
     char *name = (char *)arg;
-    prints(name);
     struct addrinfo hints;
     memset(&hints, 0, sizeof (struct addrinfo));
     hints.ai_family = AF_UNSPEC;
@@ -121,7 +95,6 @@ void *beast_controller(void *arg){
                 close(sock_fd);
                 pthread_exit(NULL);
             }
-            print_msg("Client: map received");
             printMap(map, map.userMap);
 
             memset(&map, 0, sizeof(map));
@@ -129,7 +102,6 @@ void *beast_controller(void *arg){
                 close(sock_fd);
                 pthread_exit(NULL);
             }
-            //print_msg("Client: message sent");
         }
     }
 
@@ -140,15 +112,11 @@ int main (int argc, char **argv)
 {
     srand(time(NULL));
 
-    UserPacket map;
-
     struct pollfd pfds[2];
 
     ncurs_setup();
     keypad(stdscr, TRUE);
-
-
-
+    
     if (argc != 2) {
         fprintf (stderr, "Usage: client hostname\n");
         exit (EXIT_FAILURE);
@@ -166,11 +134,7 @@ int main (int argc, char **argv)
         exit (EXIT_FAILURE);
     }
 
-    /* Scan through the list of address structures returned by
-       getaddrinfo. Stop when the the socket and connect calls are successful. */
-
     int sock_fd;
-    socklen_t length;
     struct addrinfo *rptr;
     for (rptr = result; rptr != NULL; rptr = rptr -> ai_next) {
         sock_fd = socket (rptr -> ai_family, rptr -> ai_socktype,

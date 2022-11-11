@@ -56,13 +56,13 @@ enum colors{
     TREASURE = 4,
     ENEMY = 5,
 };
+
 enum treasures{
     SMALL_TREASURE = 't',
     COIN = 'c',
     BIG_TREASURE = 'T',
     DROPPED_TREASURE = 'D',
 };
-
 
 typedef struct PlayerStats{
     int carried_coins;
@@ -89,8 +89,6 @@ typedef struct UserPacket{
     PlayerStats stats;
     char userMap[USER_MAP_SIZE];
 }UserPacket;
-
-
 
 typedef struct Player{
     UserPacket packet;
@@ -120,9 +118,7 @@ typedef struct Server{
 }Server;
 
 
-void prints(char *str);
 void mapSnip(Player *player, Server *server);
-int legalMoveChar(Server *server, int pos_x, int pos_y);
 int legalMove(WINDOW *p_win, int pos_x, int pos_y);
 int legalCoin(WINDOW *p_win, int pos_x, int pos_y);
 int isInBush(WINDOW *p_win, int pos_x, int pos_y);
@@ -132,8 +128,6 @@ int read_map(Server *server, char *filename);
 int init_main_screen(Server *server);
 int print_main_screen(Server *server);
 int init_stats_screen(Server *server);
-void print(int a, int b);
-void printc(char c);
 void print_stats_screen(Server *server);
 void init_colors();
 void ncurs_setup();

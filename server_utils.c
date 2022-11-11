@@ -11,16 +11,10 @@ int numberOfPlayers = 0;
 int numberOfBeasts = 0;
 int colors[] = {PLAYER1_COL, PLAYER2_COL, PLAYER3_COL, PLAYER4_COL};
 
-void prints(char *str){
-    FILE *fptr = fopen("/dev/pts/7", "wr");
-    fprintf(fptr,"%s", str);
-    fclose(fptr);
-}
 void mapSnip(Player *player, Server *server){
 
     char temp[10];
     memset(player->packet.userMap, 0, USER_MAP_SIZE);
-    //FILE *fptr = fopen("/dev/pts/6", "wr");
 
     player->packet.upper_x = player->packet.stats.pos_x - 2;
     player->packet.upper_y = player->packet.stats.pos_y - 2;
@@ -44,7 +38,6 @@ void mapSnip(Player *player, Server *server){
         }
         strcat(temp, "\n");
         strcat(player->packet.userMap, temp);
-        //prints(player->packet.userMap);
         Y++;
     }
 }
@@ -206,16 +199,7 @@ void print_err(Server *server,char *msg){
     mvwprintw(server->err_panel.window,1,1,msg);
     wrefresh(server->err_panel.window);
 }
-void print(int a, int b){
-    FILE *fptr = fopen("/dev/pts/2", "wr");
-    fprintf(fptr,"%d %d\n", a,b);
-    fclose(fptr);
-}
-void printc(char c){
-    FILE *fptr = fopen("/dev/pts/2", "wr");
-    fprintf(fptr,"%c\n", c);
-    fclose(fptr);
-}
+
 void print_stats_screen(Server *server){
     char temp[100];
     memset(temp, 0, 100);
@@ -302,7 +286,7 @@ void init_colors(){
     init_pair(PLAYER4_COL, COLOR_MAGENTA, COLOR_BLACK);
     init_pair(ENEMY, COLOR_RED, COLOR_BLACK);
 }
-void ncurs_setup(){
+void ncurs_setup() {
     initscr();
     curs_set(0);
     cbreak();
@@ -310,8 +294,6 @@ void ncurs_setup(){
     start_color();
     init_colors();
 }
-
-
 
 void init_player(Server *server, enum types type, pid_t pid_client, int player_number){
 
@@ -364,10 +346,6 @@ void init_player(Server *server, enum types type, pid_t pid_client, int player_n
             server->beasts[player_number].packet.stats.player_number = player_number+1;
             server->beasts[player_number].active = 1;
         }
-
-
-
-
 }
 
 int isTreasure(Server *server, int pos_x, int pos_y){
@@ -591,9 +569,6 @@ void create_box(Server *server, bool flag, int move, Player *player)
         printPlayers(server);
 
     }
-    //print(server->players[0].packet.stats.pos_x, server->players[0].packet.stats.pos_y);
-    print(server->players[0].packet.stats.carried_coins, 0);
-
     wrefresh(server->main_screen.window);
     print_stats_screen(server);
 }
@@ -610,15 +585,12 @@ void *serverInputThread(Server *server, int ch)
         switch(ch)
         {
             case 'c':
-                printc('c');
                 putCoin(server, x,y,'c');
                 break;
             case 'T':
-                printc('T');
                 putCoin(server, x,y,'T');
                 break;
             case 't':
-                printc('t');
                 putCoin(server, x,y,'t');
                 break;
         }

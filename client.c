@@ -1,49 +1,26 @@
-
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
 #include <netdb.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <errno.h>
 #include <unistd.h>
-#include <ctype.h>
-#include <stdint.h>
-#include <time.h>
 #include <ncurses.h>
-#include <sys/time.h>
-#include <pthread.h>
 #include <poll.h>
 #include "server_utils.h"
-#define SERVER_PORT                "4358"
 #define QUIT                       0
 
 
-
-
-
-
-int main (int argc, char **argv)
+int main()
 {
 
     UserPacket map;
     struct pollfd pfds[2] = {
             { .fd = STDIN_FILENO, .events = POLLIN },
     };
-
     ncurs_setup();
 
     keypad(stdscr, TRUE);
-
-
-
-
-    if (argc != 2) {
-        fprintf (stderr, "Usage: client hostname\n");
-        exit (EXIT_FAILURE);
-    }
 
     struct addrinfo hints;
     memset(&hints, 0, sizeof (struct addrinfo));
@@ -52,16 +29,12 @@ int main (int argc, char **argv)
 
     struct addrinfo *result;
     int s;
-    if ((s = getaddrinfo (argv [1], SERVER_PORT, &hints, &result)) != 0) {
+    if ((s = getaddrinfo ("localhost", SERVER_PORT, &hints, &result)) != 0) {
         fprintf (stderr, "getaddrinfo: %s\n", gai_strerror (s));
         exit (EXIT_FAILURE);
     }
 
-    /* Scan through the list of address structures returned by
-       getaddrinfo. Stop when the the socket and connect calls are successful. */
-
     int sock_fd;
-    socklen_t length;
     struct addrinfo *rptr;
     for (rptr = result; rptr != NULL; rptr = rptr -> ai_next) {
         sock_fd = socket (rptr -> ai_family, rptr -> ai_socktype,
@@ -103,7 +76,6 @@ int main (int argc, char **argv)
         return ERROR_FULL;
     }
     printMap(map, map.userMap);
-
 
     pfds[1].fd = sock_fd;
     pfds[1].events = POLLIN;
