@@ -44,7 +44,7 @@ void mapSnip(Player *player, Server *server){
         }
         strcat(temp, "\n");
         strcat(player->packet.userMap, temp);
-        prints(player->packet.userMap);
+        //prints(player->packet.userMap);
         Y++;
     }
 }
@@ -197,7 +197,7 @@ int init_err_panel(Server *server){
     if(server->err_panel.window == NULL)
         return ERROR_WIN;
 
-    box(server->err_panel.window, 0, 0);
+    //box(server->err_panel.window, 0, 0);
     wrefresh(server->err_panel.window);
     return ERROR_OK;
 }
@@ -312,6 +312,7 @@ void ncurs_setup(){
 }
 
 
+
 void init_player(Server *server, enum types type, pid_t pid_client, int player_number){
 
         int x = rand()%(MAP_HEIGHT-3);
@@ -386,6 +387,9 @@ int isTreasure(Server *server, int pos_x, int pos_y){
     }
 }
 void increaseCoins(Player *player, enum treasures treasure, int pos_x, int pos_y, linked_list *list){
+    if(player->packet.stats.type == BEAST){
+        return ;
+    }
     int val = in_list(list, pos_x, pos_y);
     switch(treasure){
         case COIN:
@@ -405,10 +409,20 @@ void increaseCoins(Player *player, enum treasures treasure, int pos_x, int pos_y
 Player *Collision(Server *server, Player *player){
     for(int i = 0; i<PLAYERS; i++){
         PlayerStats temp = server->players[i].packet.stats;
+        if(server->players[i].active == -1) continue;
         if(temp.player_number == player->packet.stats.player_number)
             continue;
         if(temp.pos_x == player->packet.stats.pos_x && temp.pos_y == player->packet.stats.pos_y){
             return &server->players[i];
+        }
+    }
+    for(int i = 0; i<BEASTS; i++){
+        PlayerStats temp = server->beasts[i].packet.stats;
+        if(server->beasts[i].active == -1) continue;
+        if(temp.player_number == player->packet.stats.player_number)
+            continue;
+        if(temp.pos_x == player->packet.stats.pos_x && temp.pos_y == player->packet.stats.pos_y){
+            return &server->beasts[i];
         }
     }
     return NULL;
@@ -423,6 +437,7 @@ void resetPlayer(Server *server, Player *player){
 }
 void setDroppedTreasure(Server *server, Player *player1, Player *player2){
 
+    if(player1->packet.stats.type == BEAST && player2->packet.stats.type == BEAST) return ;
     mvwaddch(server->main_screen.window, player1->packet.stats.pos_y, player1->packet.stats.pos_x, 'D' | COLOR_PAIR(TREASURE));
     ll_push_back(server->dropped_treasures, player1->packet.stats.pos_x, player1->packet.stats.pos_y, player1->packet.stats.carried_coins + player2->packet.stats.carried_coins);
     //push back linked list with player1 and player2 gold
@@ -460,6 +475,15 @@ void printPlayers(Server *server){
         if(server->beasts[i].active == -1) continue;
         mvwaddch(server->main_screen.window, server->beasts[i].packet.stats.pos_y, server->beasts[i].packet.stats.pos_x, server->beasts[i].packet.usr | COLOR_PAIR(server->beasts[i].packet.stats.color));
     }
+}
+void printPlayerTreasures(Server *server){
+
+    struct node_t *temp = server->dropped_treasures->head;
+    while(temp != NULL){
+        mvwaddch(server->main_screen.window, temp->pos_y, temp->pos_x, 'D' | COLOR_PAIR(TREASURE));
+        temp = temp->next;
+    }
+
 }
 void create_box(Server *server, bool flag, int move, Player *player)
 {
@@ -563,11 +587,13 @@ void create_box(Server *server, bool flag, int move, Player *player)
         }
 
         print_main_screen(server);
+        printPlayerTreasures(server);
         printPlayers(server);
 
     }
     //print(server->players[0].packet.stats.pos_x, server->players[0].packet.stats.pos_y);
     print(server->players[0].packet.stats.carried_coins, 0);
+
     wrefresh(server->main_screen.window);
     print_stats_screen(server);
 }

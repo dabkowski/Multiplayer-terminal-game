@@ -36,11 +36,17 @@ enum types{
     LISTENER = 3
 };
 
+enum commands{
+    COMM_SPAWN = 'b',
+};
+
 enum errors{
     ERROR_PARAMS = -1,
     ERROR_FILE = -2,
     ERROR_OK = 0,
     ERROR_WIN = -5,
+    ERROR_FULL = -3,
+    ERROR_CONN = -4,
 };
 
 enum colors{
@@ -147,7 +153,7 @@ void generateLegendPlayer();
 void updateRounds(Server *server);
 void erasePlayer(Player *player);
 int init_err_panel(Server *server);
-
+void printPlayerTreasures(Server *server);
 void print_err(Server *server,char *msg);
 int makeMoveBeast(UserPacket packet);
 void printPlayerStats(UserPacket packet);
