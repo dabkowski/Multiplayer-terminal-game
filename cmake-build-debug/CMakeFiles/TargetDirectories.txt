@@ -1,3 +1,0 @@
-/media/sf_vm/second_try/cmake-build-debug/CMakeFiles/edit_cache.dir
-/media/sf_vm/second_try/cmake-build-debug/CMakeFiles/rebuild_cache.dir
-/media/sf_vm/second_try/cmake-build-debug/CMakeFiles/second_try.dir

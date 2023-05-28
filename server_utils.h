@@ -1,5 +1,5 @@
-#ifndef SECOND_TRY_SERVER_UTILS_H
-#define SECOND_TRY_SERVER_UTILS_H
+#ifndef SERVER_UTILS_H
+#define SERVER_UTILS_H
 
 #include <ncurses.h>
 #include "linked_list.h"
@@ -15,32 +15,33 @@
 #define NUM_FDS 6
 #define BACKLOG 10
 
-
-
 extern int colors[];
 extern int numberOfPlayers;
 extern int numberOfBeasts;
 
-
-enum player_colors{
+enum player_colors
+{
     PLAYER1_COL = 115,
     PLAYER2_COL = 116,
     PLAYER3_COL = 117,
     PLAYER4_COL = 118
 };
 
-enum types{
+enum types
+{
     NPC = 0,
     PLAYER = 1,
     BEAST = 2,
     LISTENER = 3
 };
 
-enum commands{
+enum commands
+{
     COMM_SPAWN = 'b',
 };
 
-enum errors{
+enum errors
+{
     ERROR_PARAMS = -1,
     ERROR_FILE = -2,
     ERROR_OK = 0,
@@ -49,7 +50,8 @@ enum errors{
     ERROR_CONN = -4,
 };
 
-enum colors{
+enum colors
+{
     BUSH = 1,
     FIREPLACE = 2,
     USER = 3,
@@ -57,14 +59,16 @@ enum colors{
     ENEMY = 5,
 };
 
-enum treasures{
+enum treasures
+{
     SMALL_TREASURE = 't',
     COIN = 'c',
     BIG_TREASURE = 'T',
     DROPPED_TREASURE = 'D',
 };
 
-typedef struct PlayerStats{
+typedef struct PlayerStats
+{
     int carried_coins;
     int brought_coins;
     int pos_x;
@@ -80,32 +84,36 @@ typedef struct PlayerStats{
     int deaths;
     int color;
 
-}PlayerStats;
+} PlayerStats;
 
-typedef struct UserPacket{
+typedef struct UserPacket
+{
     int upper_x;
     int upper_y;
     chtype usr;
     PlayerStats stats;
     char userMap[USER_MAP_SIZE];
-}UserPacket;
+} UserPacket;
 
-typedef struct Player{
+typedef struct Player
+{
     UserPacket packet;
     int user_pid;
     int inBush;
     int active;
-}Player;
+} Player;
 
-typedef struct Win{
+typedef struct Win
+{
     int upper_x;
     int upper_y;
     WINDOW *window;
     int win_width;
     int win_height;
-}Win;
+} Win;
 
-typedef struct Server{
+typedef struct Server
+{
     char map[MAP_WIDTH][MAP_HEIGHT];
     Player players[PLAYERS];
     Player beasts[BEASTS];
@@ -115,46 +123,83 @@ typedef struct Server{
     Win err_panel;
     uint64_t round_number;
     linked_list *dropped_treasures;
-}Server;
+} Server;
 
 
 void mapSnip(Player *player, Server *server);
+
 int legalMove(WINDOW *p_win, int pos_x, int pos_y);
+
 int legalCoin(WINDOW *p_win, int pos_x, int pos_y);
+
 int isInBush(WINDOW *p_win, int pos_x, int pos_y);
+
 void putCoin(Server *server, int pos_x, int pos_y, chtype type);
+
 void init_server_stats(Server *server);
+
 int read_map(Server *server, char *filename);
+
 int init_main_screen(Server *server);
+
 int print_main_screen(Server *server);
+
 int init_stats_screen(Server *server);
+
 void print_stats_screen(Server *server);
+
 void init_colors();
+
 void ncurs_setup();
+
 void init_player(Server *server, enum types type, pid_t pid_client, int player_number);
+
 int isTreasure(Server *server, int pos_x, int pos_y);
+
 void increaseCoins(Player *player, enum treasures treasure, int pos_x, int pos_y, linked_list *list);
+
 Player *Collision(Server *server, Player *player);
+
 void resetPlayer(Server *server, Player *player);
+
 void setDroppedTreasure(Server *server, Player *player1, Player *player2);
+
 int isCampsite(Server *server, int pos_x, int pos_y);
+
 void leaveTreasure(Player *player, int pos_x, int pos_y);
+
 void printPlayers(Server *server);
+
 void create_box(Server *server, bool flag, int move, Player *player);
+
 void *serverInputThread(Server *server, int ch);
+
 void generateLegend(Server *server);
+
 void generateLegendPlayer();
+
 void updateRounds(Server *server);
+
 void erasePlayer(Player *player);
+
 int init_err_panel(Server *server);
+
 void printPlayerTreasures(Server *server);
-void print_err(Server *server,char *msg);
+
+void print_err(Server *server, char *msg);
+
 int makeMoveBeast(UserPacket packet);
+
 void printPlayerStats(UserPacket packet);
+
 void printMap(UserPacket packet, char *map_snippet);
+
 int random_move();
+
 int plot_line(int x0, int y0, int x1, int y1);
+
 int distance(int x0, int y0, int x1, int y1);
+
 int makeMovePlayer(UserPacket packet);
 
-#endif //SECOND_TRY_SERVER_UTILS_H
+#endif //SERVER_UTILS_H

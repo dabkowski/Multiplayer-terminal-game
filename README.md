@@ -35,8 +35,18 @@ Multiplayer game based on TCP sockets communication with multithreading.
 * Human players and bot players are treated equally from the server's perspective, ensuring a unified API interface between the server and its clients.
 * The server handles situations where a player naturally leaves the game (e.g., pressing Q on the client side) or abruptly disconnects (process termination). During gameplay, players are able to disconnect and later reconnect to a vacant spot if available.
 
+# Additional specification
+* Server, beast client, player clients and bot clients are separate processes:
+  * Each player and bot are run as an individual process, allowing for concurrent execution and independent decision-making.
+  * Beasts are implemented as a single process with multiple threads, where each beast corresponds to one thread.
+
 # Screenshots
 
 ## Server view
-![](https://github.com/dabkowski/Multiplayer-terminal-game/blob/main/assets/server.gif)
+![](https://github.com/dabkowski/Multiplayer-terminal-game/blob/main/assets/server_view.gif)
 
+## Client view
+![](https://github.com/dabkowski/Multiplayer-terminal-game/blob/main/assets/client_view.gif)
+
+## Beast attack
+![](https://github.com/dabkowski/Multiplayer-terminal-game/blob/main/assets/beast_attack.gif)

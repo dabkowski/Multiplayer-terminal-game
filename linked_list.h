@@ -1,5 +1,5 @@
-#ifndef SECOND_TRY_LINKED_LIST_H
-#define SECOND_TRY_LINKED_LIST_H
+#ifndef LINKED_LIST_H
+#define LINKED_LIST_H
 
 struct node_t
 {
@@ -13,11 +13,14 @@ typedef struct linked_list_t
 {
     struct node_t *head;
     struct node_t *tail;
-}linked_list;
+} linked_list;
 
-struct linked_list_t* ll_create();
-int ll_push_back(struct linked_list_t* ll, int pos_x, int pos_y, int value);
-int in_list(struct linked_list_t* ll, int pos_x, int pos_y);
-int ll_remove(struct linked_list_t* ll, unsigned int index);
+struct linked_list_t *ll_create();
 
-#endif //SECOND_TRY_LINKED_LIST_H
+int ll_push_back(struct linked_list_t *ll, int pos_x, int pos_y, int value);
+
+int in_list(struct linked_list_t *ll, int pos_x, int pos_y);
+
+int ll_remove(struct linked_list_t *ll, unsigned int index);
+
+#endif //LINKED_LIST_H
